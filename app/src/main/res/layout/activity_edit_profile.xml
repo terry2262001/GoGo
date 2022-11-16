@@ -77,13 +77,15 @@
             android:id="@+id/tvChange"
             android:textColor="@color/colorPrimary"
             android:textSize="16sp"/>
+
         <com.rengwuxian.materialedittext.MaterialEditText
+            android:id="@+id/etFullname"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/etFullname"
-            android:hint="Full name"
             android:layout_marginTop="20dp"
-            app:met_floatingLabel="normal"/>
+            android:hint="Full name"
+            app:met_floatingLabel="normal" />
+
         <com.rengwuxian.materialedittext.MaterialEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

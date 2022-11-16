@@ -11,9 +11,9 @@
         android:icon="@drawable/ic_search"
         android:title=""/>
 
-    <item android:id="@+id/nav_add"
+    <item android:id="@+id/nav_room"
         android:enabled="true"
-        android:icon="@drawable/ic_add"
+        android:icon="@drawable/ic_marker"
         android:title=""/>
     <item android:id="@+id/nav_heart"
         android:enabled="true"
