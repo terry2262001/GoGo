@@ -58,7 +58,6 @@ public class Common {
     }
 
     public static float getBearing(LatLng begin, LatLng end) {
-        //You can copy this function by link at description
         double lat = Math.abs(begin.latitude - end.latitude);
         double lng = Math.abs(begin.longitude - end.longitude);
 

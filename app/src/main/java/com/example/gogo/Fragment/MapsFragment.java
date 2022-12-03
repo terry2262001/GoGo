@@ -130,7 +130,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     ///limit space  user
     private double distance = 1.0; //1km
     private static final double LIMIT_RANGE = 10.0;//10km
-    private Location previosLocation, currentLocation;
+
 
     IFirebaseDriverInfoListener iFirebaseDriverInfoListener;
     IFirebaseFailedListener iFirebaseFailedListener;
@@ -141,7 +141,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private IGoogleAPI iGoogleAPI;
     //moving marker
-    private List<LatLng> polylindeList;
+
+   private List<LatLng> polylindeList;
     private Handler handler;
     private  int index,next;
     private LatLng start,end;
@@ -163,7 +164,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     @Override
     public void onDestroy() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-        geoFire.removeLocation(FirebaseAuth.getInstance().getCurrentUser().getUid());
+      //  geoFire.removeLocation(FirebaseAuth.getInstance().getCurrentUser().getUid());
         onlineRef.removeEventListener(onlineValueEventListener);
         super.onDestroy();
     }
@@ -271,22 +272,22 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                         });
                 loadAvailableDrivers();
 
-
-                ////////2: rider : if user has change location , calculate and load driver again
-                if (firstTime) {
-                    previosLocation = currentLocation = locationResult.getLastLocation();
-                    firstTime = false;
-
-                } else {
-                    previosLocation = currentLocation;
-                    currentLocation = locationResult.getLastLocation();
-                }
-                if (previosLocation.distanceTo(currentLocation) / 1000 < LIMIT_RANGE) {//// not over range
-                    loadAvailableDrivers();
-
-                } else {
-
-                }
+//
+//                ////////2: rider : if user has change location , calculate and load driver again
+//                if (firstTime) {
+//                    previosLocation = currentLocation = locationResult.getLastLocation();
+//                    firstTime = false;
+//
+//                } else {
+//                    previosLocation = currentLocation;
+//                    currentLocation = locationResult.getLastLocation();
+//                }
+//                if (previosLocation.distanceTo(currentLocation) / 1000 < LIMIT_RANGE) {//// not over range
+//                 //   loadAvailableDrivers();
+//
+//                } else {
+//
+//                }
 
                 ///////
 
@@ -296,7 +297,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
 
         fusedLocationProviderClient.requestLocationUpdates(mLocationRequest, locationCallback, Looper.myLooper());
-        //  loadAvailableDrivers();
+          //loadAvailableDrivers();
         fusedLocationProviderClient.getLastLocation()
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -331,7 +332,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     }
 
     private void loadAvailableDrivers() {
-        ArrayList<DriverDeoModel> listuser = new ArrayList<>();
+        ArrayList<DriverDeoModel> listener = new ArrayList<>();
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Snackbar.make(getView(), getString(R.string.permission_require), Snackbar.LENGTH_SHORT).show();
@@ -352,50 +353,51 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                             addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                             countryName1 = addressList.get(0).getCountryName();
 
-                            ///query
-                            DatabaseReference dirver_location_ref = FirebaseDatabase.getInstance()
-                                    .getReference("UserLocation").child(roomid);
-                            GeoFire gf = new GeoFire(dirver_location_ref);
-                            GeoQuery geoQuery = gf.queryAtLocation(new GeoLocation(location.getLatitude(),
-                                    location.getLongitude()), distance);
-                            geoQuery.removeAllListeners();
-                            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-                                @Override
-                                public void onKeyEntered(String key, GeoLocation location) {
-                                    Common.driverFound.add(new DriverDeoModel(key, location));
-                                    listuser.add(new DriverDeoModel(key, location));
-
-
-                                }
-
-                                @Override
-                                public void onKeyExited(String key) {
-
-                                }
-
-                                @Override
-                                public void onKeyMoved(String key, GeoLocation location) {
-
-                                }
-
-                                @Override
-                                public void onGeoQueryReady() {
-                                    if (distance < LIMIT_RANGE) {
-                                        distance++;
-                                        loadAvailableDrivers(); // continue search in new distance
-                                    } else {
-                                        distance = 1.0;// reset it
-                                        addDriverMarker();
-                                    }
-
-                                }
-
-                                @Override
-                                public void onGeoQueryError(DatabaseError error) {
-                                    Snackbar.make(getView(), error.getMessage(), Snackbar.LENGTH_SHORT).show();
-
-                                }
-                            });
+//                            ///query
+//                            DatabaseReference dirver_location_ref = FirebaseDatabase.getInstance()
+//                                    .getReference("UserLocation").child(roomid);
+//                            GeoFire gf = new GeoFire(dirver_location_ref);
+//                            GeoQuery geoQuery = gf.queryAtLocation(new GeoLocation(location.getLatitude(),
+//                                    location.getLongitude()), distance);
+//                            geoQuery.removeAllListeners();
+//                            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+//                                @Override
+//                                public void onKeyEntered(String key, GeoLocation location) {
+//                                    Common.driverFound.add(new DriverDeoModel(key, location));
+//                                    listener.add(new DriverDeoModel(key, location));
+//
+//
+//                                }
+//
+//                                @Override
+//                                public void onKeyExited(String key) {
+//
+//                                }
+//
+//                                @Override
+//                                public void onKeyMoved(String key, GeoLocation location) {
+//
+//                                }
+//
+//                                @Override
+//                                public void onGeoQueryReady() {
+//                                    if (distance < LIMIT_RANGE) {
+//                                        distance++;
+//                                      //  loadAvailableDrivers(); // continue search in new distance
+//                                    } else {
+//                                        distance = 1.0;// reset it
+//                                        addDriverMarker();
+//                                    }
+//
+//
+//                                }
+//
+//                                @Override
+//                                public void onGeoQueryError(DatabaseError error) {
+//                                    Snackbar.make(getView(), error.getMessage(), Snackbar.LENGTH_SHORT).show();
+//
+//                                }
+//                            });
                             DatabaseReference userLocationRoom = FirebaseDatabase.getInstance()
                                     .getReference("UserLocation").child(roomid);
                             userLocationRoom.addChildEventListener(new ChildEventListener() {
@@ -408,11 +410,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                     Location newUserLocation = new Location("");
                                     newUserLocation.setLatitude(geoLocation.latitude);
                                     newUserLocation.setLongitude(geoLocation.longitude);
-//                                    float newDistance = location.distanceTo(newUserLocation) / 1000 ;// in km
-//                                    if (newDistance <= LIMIT_RANGE)
-//                                    {
-//                                        findDriverByKey(driverDeoModel);// if user in range, add to map
-//                                    }
+                                    float newDistance = location.distanceTo(newUserLocation) / 1000 ;// in km
+                                    if (newDistance <= LIMIT_RANGE)
+                                    {
+                                        findDriverByKey(driverDeoModel);// if user in range, add to map
+                                    }
 
 
                                 }
@@ -601,19 +603,17 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                             .snippet(driverDeoModel.getDriverInfoModel().getBio())
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
 
-
                     ));
-
-
         }
 
         if (!TextUtils.isEmpty(roomid)) {
             DatabaseReference driverlocaion = FirebaseDatabase.getInstance()
-                    .getReference("UserLocation").child(roomid).child(FirebaseAuth.getInstance().getUid());
+                    .getReference("UserLocation").child(roomid).child(driverDeoModel.getKey());
             driverlocaion.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (!snapshot.hasChildren()) {
+
                         if (Common.markerList.get(driverDeoModel.getKey()) != null) {
                             Common.markerList.get(driverDeoModel.getKey()).remove();//remove marker
                             Common.markerList.remove(driverDeoModel.getKey());// remove marker infor has map
@@ -639,9 +639,11 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                         .append(animationMode.getGeoQueryModel().getL().get(1))
                                         .toString();
                                 moveMarkerAnimation(driverDeoModel.getKey(), animationMode, currentMarker, from, to);
+
                             } else {
                                 //First location init
                                 Common.driverlocationSubcrible.put(driverDeoModel.getKey(), animationMode);
+
                             }
                         }
                     }
