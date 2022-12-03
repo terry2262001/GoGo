@@ -141,14 +141,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     //
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private IGoogleAPI iGoogleAPI;
-    //moving marker
 
-   private List<LatLng> polylindeList;
-    private Handler handler;
-    private  int index,next;
-    private LatLng start,end;
-    private float v;
-    private double lat,lng;
 
 
 
@@ -181,9 +174,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
 
     }
 
-    private static long UPDATE_INTERVAL = 5000;   // 10 seconds
-    private static long FASTEST_INTERVAL = 3000;   // 2 seconds
-    private static long DISPLACEMENT = 10;
 
 
     ValueEventListener onlineValueEventListener = new ValueEventListener() {
@@ -680,40 +670,56 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                 JSONObject  route = jsonArray.getJSONObject(i);
                                 JSONObject poly = route.getJSONObject("overview_polyline");
                                 String  polyline =  poly.getString("points");
-                                polylindeList = Common.decodePoly(polyline);
+                                //polylindeList = Common.decodePoly(polyline);
+                                animationMode.setPolylindeList(Common.decodePoly(polyline));
                             }
                             //moving
-                            handler =  new Handler();
-                            index = -1;
-                            next = 1;
+                           // handler =  new Handler();
+                          //  index = -1;
+                          //  next = 1;
+                            animationMode.setIndex(-1);
+                            animationMode.setNext(1);
+
 
                             Runnable runnable = new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (polylindeList.size() > 1 ){
-                                        if (index < polylindeList.size()-2){
-                                            index++;
-                                            next  = index+1;
-                                            start = polylindeList.get(index);
-                                            end = polylindeList.get(next);
+                                    if (animationMode.getPolylindeList() !=null && animationMode.getPolylindeList().size() > 1 ){
+                                        if (animationMode.getIndex() < animationMode.getPolylindeList().size()-2){
+                                            //index++
+                                            animationMode.setIndex(animationMode.getIndex()+1);
+                                            // next  = index+1;
+                                            animationMode.setNext(animationMode.getIndex()+1);
+                                            //   start = polylindeList.get(index);
+                                            animationMode.setStart(animationMode.getPolylindeList().get(animationMode.getIndex()));
+                                            //  end = polylindeList.get(next);
+                                            animationMode.setEnd(animationMode.getPolylindeList().get(animationMode.getNext()));
+
                                         }
                                         ValueAnimator valueAnimator = ValueAnimator.ofInt(0,1);
                                         valueAnimator.setDuration(3000);
                                         valueAnimator.setInterpolator(new LinearInterpolator());
                                         valueAnimator.addUpdateListener(value -> {
-                                            v =  value.getAnimatedFraction();
-                                            lat = v*end.latitude + (1-v) * start.latitude;
-                                            lng = v*end.longitude + (1-v) * start.longitude;
-                                            LatLng newPos = new LatLng(lat,lng);
+                                          //  v =  value.getAnimatedFraction();
+                                            animationMode.setV(value.getAnimatedFraction());
+                                          //  lat = v*end.latitude + (1-v) * start.latitude;
+                                            animationMode.setLat(animationMode.getV()* animationMode.getEnd().latitude+
+                                                    (1-animationMode.getV())
+                                                            * animationMode.getStart().latitude);
+                                           // lng = v*end.longitude + (1-v) * start.longitude;
+                                            animationMode.setLng(animationMode.getV()* animationMode.getEnd().longitude+
+                                                    (1-animationMode.getV())
+                                                            * animationMode.getStart().longitude);
+                                            LatLng newPos = new LatLng(animationMode.getLat(),animationMode.getLng());
                                             currentMarker.setPosition(newPos);
                                             currentMarker.setAnchor(0.5f,0.5f);
-                                            currentMarker.setRotation(Common.getBearing(start,newPos));
+                                            currentMarker.setRotation(Common.getBearing(animationMode.getStart(),newPos));
 
                                         });
                                         valueAnimator.start();
-                                        if (index  < polylindeList.size() - 2 ){//reach destination
-                                            handler.postDelayed(this,1500);
-                                        }else if (index  < polylindeList.size() - 1){//done
+                                        if (animationMode.getIndex()  < animationMode.getPolylindeList().size() - 2 ){//reach destination
+                                            animationMode.getHandler().postDelayed(this,1500);
+                                        }else if (animationMode.getIndex()  < animationMode.getPolylindeList().size() - 1){//done
                                             animationMode.setRun(false);
                                             Common.driverlocationSubcrible.put(key,animationMode);//update data
 
@@ -724,7 +730,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                 }
                             };
                             //run handle
-                            handler.postDelayed(runnable,1500);
+                            animationMode.getHandler().postDelayed(runnable,1500);
 
                         }catch (Exception e)
                         {
