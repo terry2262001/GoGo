@@ -129,6 +129,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     String roomid;
     ///limit space  user
     private double distance = 1.0; //1km
+    private Location previosLocation,currentLocation;
     private static final double LIMIT_RANGE = 10.0;//10km
 
 
@@ -273,21 +274,21 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                 loadAvailableDrivers();
 
 //
-//                ////////2: rider : if user has change location , calculate and load driver again
-//                if (firstTime) {
-//                    previosLocation = currentLocation = locationResult.getLastLocation();
-//                    firstTime = false;
-//
-//                } else {
-//                    previosLocation = currentLocation;
-//                    currentLocation = locationResult.getLastLocation();
-//                }
-//                if (previosLocation.distanceTo(currentLocation) / 1000 < LIMIT_RANGE) {//// not over range
-//                 //   loadAvailableDrivers();
-//
-//                } else {
-//
-//                }
+                ////////2: rider : if user has change location , calculate and load driver again
+                if (firstTime) {
+                    previosLocation = currentLocation = locationResult.getLastLocation();
+                    firstTime = false;
+
+                } else {
+                    previosLocation = currentLocation;
+                    currentLocation = locationResult.getLastLocation();
+                }
+                if (previosLocation.distanceTo(currentLocation) / 1000 < LIMIT_RANGE) {//// not over range
+                 //   loadAvailableDrivers();
+
+                } else {
+
+                }
 
                 ///////
 
@@ -354,50 +355,50 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                             countryName1 = addressList.get(0).getCountryName();
 
 //                            ///query
-//                            DatabaseReference dirver_location_ref = FirebaseDatabase.getInstance()
-//                                    .getReference("UserLocation").child(roomid);
-//                            GeoFire gf = new GeoFire(dirver_location_ref);
-//                            GeoQuery geoQuery = gf.queryAtLocation(new GeoLocation(location.getLatitude(),
-//                                    location.getLongitude()), distance);
-//                            geoQuery.removeAllListeners();
-//                            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-//                                @Override
-//                                public void onKeyEntered(String key, GeoLocation location) {
-//                                    Common.driverFound.add(new DriverDeoModel(key, location));
-//                                    listener.add(new DriverDeoModel(key, location));
-//
-//
-//                                }
-//
-//                                @Override
-//                                public void onKeyExited(String key) {
-//
-//                                }
-//
-//                                @Override
-//                                public void onKeyMoved(String key, GeoLocation location) {
-//
-//                                }
-//
-//                                @Override
-//                                public void onGeoQueryReady() {
-//                                    if (distance < LIMIT_RANGE) {
-//                                        distance++;
-//                                      //  loadAvailableDrivers(); // continue search in new distance
-//                                    } else {
-//                                        distance = 1.0;// reset it
-//                                        addDriverMarker();
-//                                    }
-//
-//
-//                                }
-//
-//                                @Override
-//                                public void onGeoQueryError(DatabaseError error) {
-//                                    Snackbar.make(getView(), error.getMessage(), Snackbar.LENGTH_SHORT).show();
-//
-//                                }
-//                            });
+                            DatabaseReference dirver_location_ref = FirebaseDatabase.getInstance()
+                                    .getReference("UserLocation").child(roomid);
+                            GeoFire gf = new GeoFire(dirver_location_ref);
+                            GeoQuery geoQuery = gf.queryAtLocation(new GeoLocation(location.getLatitude(),
+                                    location.getLongitude()), distance);
+                            geoQuery.removeAllListeners();
+                            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+                                @Override
+                                public void onKeyEntered(String key, GeoLocation location) {
+                                    Common.driverFound.add(new DriverDeoModel(key, location));
+                                    listener.add(new DriverDeoModel(key, location));
+
+
+                                }
+
+                                @Override
+                                public void onKeyExited(String key) {
+
+                                }
+
+                                @Override
+                                public void onKeyMoved(String key, GeoLocation location) {
+
+                                }
+
+                                @Override
+                                public void onGeoQueryReady() {
+                                    if (distance < LIMIT_RANGE) {
+                                        distance++;
+                                      //  loadAvailableDrivers(); // continue search in new distance
+                                    } else {
+                                        distance = 1.0;// reset it
+                                        addDriverMarker();
+                                    }
+
+
+                                }
+
+                                @Override
+                                public void onGeoQueryError(DatabaseError error) {
+                                    Snackbar.make(getView(), error.getMessage(), Snackbar.LENGTH_SHORT).show();
+
+                                }
+                            });
                             DatabaseReference userLocationRoom = FirebaseDatabase.getInstance()
                                     .getReference("UserLocation").child(roomid);
                             userLocationRoom.addChildEventListener(new ChildEventListener() {
