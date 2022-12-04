@@ -141,6 +141,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     //
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private IGoogleAPI iGoogleAPI;
+    boolean isGo = true;
 
 
 
@@ -241,26 +242,34 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                         locationResult.getLastLocation().getLongitude());
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPotion, 18f));
                 //  updateLocation
-                geoFire.setLocation(FirebaseAuth.getInstance().getCurrentUser().getUid(),
-                        new GeoLocation(locationResult.getLastLocation().getLatitude(),
-                                locationResult.getLastLocation().getLongitude()),
-                        new GeoFire.CompletionListener() {
-                            @Override
-                            public void onComplete(String key, DatabaseError error) {
-                                if (error != null) {
-                                    Snackbar.make(mapFragment.getView(), error.getMessage(), Snackbar.LENGTH_SHORT)
-                                            .show();
-                                } else {
-                                    if (isFirstTime){
-                                        Snackbar.make(mapFragment.getView(), "You are online", Snackbar.LENGTH_SHORT)
+
+                    geoFire.setLocation(FirebaseAuth.getInstance().getCurrentUser().getUid(),
+                            new GeoLocation(locationResult.getLastLocation().getLatitude(),
+                                    locationResult.getLastLocation().getLongitude()),
+                            new GeoFire.CompletionListener() {
+                                @Override
+                                public void onComplete(String key, DatabaseError error) {
+
+                                    if (error != null) {
+                                        Snackbar.make(mapFragment.getView(), error.getMessage(), Snackbar.LENGTH_SHORT)
                                                 .show();
-                                        isFirstTime = false;
+                                    } else {
+                                        if (isFirstTime){
+                                            Snackbar.make(mapFragment.getView(), "You are online", Snackbar.LENGTH_SHORT)
+                                                    .show();
+                                            isFirstTime = false;
+                                            isGo = false;
+
+
+                                        }
 
                                     }
-
                                 }
-                            }
-                        });
+                            });
+
+
+
+
                 loadAvailableDrivers();
 
 //
@@ -273,8 +282,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                     previosLocation = currentLocation;
                     currentLocation = locationResult.getLastLocation();
                 }
-                if (previosLocation.distanceTo(currentLocation) / 1000 < LIMIT_RANGE) {//// not over range
-                 //   loadAvailableDrivers();
+                if (previosLocation.distanceTo(currentLocation) / 1000 < 0.5) {//// not over range
+                 //  loadAvailableDrivers();
+
+
 
                 } else {
 
@@ -307,11 +318,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                             String addressLine = addressList.get(0).getAddressLine(0);
                             countryName = addressList.get(0).getCountryName();
 
-
-                            //database
-//                            driverLocationRef = FirebaseDatabase.getInstance().getReference("UserLocation");//.child(countryName);
-//                            currentUserRef = driverLocationRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-//                            geoFire = new GeoFire(driverLocationRef);
 
 
                         } catch (IOException e) {
@@ -367,6 +373,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
 
                                 @Override
                                 public void onKeyMoved(String key, GeoLocation location) {
+                                    Common.driverFound.remove(new DriverDeoModel(key,location));
 
                                 }
 
@@ -464,7 +471,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.hasChildren()) {
                             driverDeoModel.setDriverInfoModel(snapshot.getValue(DriverInfoModel.class));
-                            iFirebaseDriverInfoListener.onDriverInfoLoadSuccess(driverDeoModel);
+                            if (!driverDeoModel.getDriverInfoModel().getId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
+                                iFirebaseDriverInfoListener.onDriverInfoLoadSuccess(driverDeoModel);
+                            }
+
                         } else {
                             iFirebaseFailedListener.onFirebaseLoadFailed(getString(R.string.not_found_key) + driverDeoModel.getDriverInfoModel().getFullname());
                         }
@@ -586,15 +596,20 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     public void onDriverInfoLoadSuccess(DriverDeoModel driverDeoModel) {
         //if already  have marker with this key , doesn't  set again
         if (!Common.markerList.containsValue(driverDeoModel.getKey())) {
-            Common.markerList.put(driverDeoModel.getKey(),
-                    mMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(driverDeoModel.getGeoLocation().latitude, driverDeoModel.getGeoLocation().longitude))
-                            .title(Common.buildName(driverDeoModel.getDriverInfoModel().getUsername()))
-                            //  .title(driverDeoModel.getDriverInfoModel().getUsername())
-                            .snippet(driverDeoModel.getDriverInfoModel().getBio())
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
+            driverLocationRef = FirebaseDatabase.getInstance().getReference("UserLocation").child(roomid);
+            currentUserRef = driverLocationRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-                    ));
+                Common.markerList.put(driverDeoModel.getKey(),
+                        mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(driverDeoModel.getGeoLocation().latitude, driverDeoModel.getGeoLocation().longitude))
+                                .title(Common.buildName(driverDeoModel.getDriverInfoModel().getUsername()))
+                                //  .title(driverDeoModel.getDriverInfoModel().getUsername())
+                                .snippet(driverDeoModel.getDriverInfoModel().getBio())
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
+
+                        ));
+
+
         }
 
         if (!TextUtils.isEmpty(roomid)) {
@@ -612,6 +627,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                             driverlocaion.removeEventListener(this);// // remove evenlistender;
 
                         }
+
                     } else {
                         if (Common.markerList.get(driverDeoModel.getKey()) != null) {
                             GeoQueryModel geoQueryModel = snapshot.getValue(GeoQueryModel.class);
@@ -629,7 +645,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                         .append(",")
                                         .append(animationMode.getGeoQueryModel().getL().get(1))
                                         .toString();
-                                moveMarkerAnimation(driverDeoModel.getKey(), animationMode, currentMarker, from, to);
+                                moveMarkerAnimation(driverDeoModel.getKey(), animationMode, currentMarker, from, to,driverDeoModel);
+
 
                             } else {
                                 //First location init
@@ -650,7 +667,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
         }
     }
 
-    private void moveMarkerAnimation(String key, AnimationMode animationMode, Marker currentMarker, String from, String to) {
+    private void moveMarkerAnimation(String key, AnimationMode animationMode, Marker currentMarker, String from, String to,DriverDeoModel driverDeoModel) {
         if (!animationMode.isRun()) {
             //requestApi
             compositeDisposable.add(iGoogleAPI.getDirections("driving",
@@ -723,14 +740,19 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                             animationMode.setRun(false);
                                             Common.driverlocationSubcrible.put(key,animationMode);//update data
 
+
                                         }
 
+
                                     }
+
 
                                 }
                             };
                             //run handle
                             animationMode.getHandler().postDelayed(runnable,1500);
+
+
 
                         }catch (Exception e)
                         {
