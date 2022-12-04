@@ -27,7 +27,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyARvcuKLyKFx7ZSUXrN-DxYTD7ph4Bvlbc" />
+            android:value="@string/MAPS_API_KEY" />
 
         <activity
             android:name=".AddRoomMapsActivity"
