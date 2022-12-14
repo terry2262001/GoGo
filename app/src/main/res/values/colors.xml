@@ -14,5 +14,6 @@
     <color name="colorAccent1">#FF0E0E0E</color>
     <color name="colorCheck">#FF0E0E0E</color>
     <color name="colorUnCheck">#c2bdbf</color>
+    <color name="trans">#00000000 </color>
 
 </resources>

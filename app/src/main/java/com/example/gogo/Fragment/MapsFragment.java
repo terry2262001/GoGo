@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -18,6 +19,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
+import androidx.annotation.BinderThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -33,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
+import android.widget.AutoCompleteTextView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -48,15 +51,18 @@ import com.example.gogo.Common.Common;
 import com.example.gogo.Model.AnimationMode;
 import com.example.gogo.Model.DriverDeoModel;
 import com.example.gogo.Model.DriverInfoModel;
+import com.example.gogo.Model.EventBus.SelectPlaceEvent;
 import com.example.gogo.Model.GeoQueryModel;
 import com.example.gogo.R;
 import com.example.gogo.Remote.IGoogleAPI;
 import com.example.gogo.Remote.RetrofitClient;
+import com.example.gogo.RequestUserActivity;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -73,6 +79,10 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -81,7 +91,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -90,6 +102,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -97,6 +110,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -105,7 +120,14 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback, IFirebaseFailedListener, IFirebaseDriverInfoListener {
     //
+    //
+    // places
+    @BindView(R.id.activity_main)
+    SlidingUpPanelLayout slidingUpPanelLayout;
+    private AutocompleteSupportFragment autocompleteSupportFragment;
 
+
+    //
     private GoogleMap mMap;
 
     public static final int PERMISSION_CODE = 100;
@@ -159,7 +181,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
     @Override
     public void onDestroy() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-      //  geoFire.removeLocation(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        //  geoFire.removeLocation(FirebaseAuth.getInstance().getCurrentUser().getUid());
         onlineRef.removeEventListener(onlineValueEventListener);
         super.onDestroy();
     }
@@ -206,16 +228,49 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
         SharedPreferences pref = getContext().getSharedPreferences("PREFS", Context.MODE_PRIVATE);
         roomid = pref.getString("roomid", "none");
 
-
         init();
+        initViews(view);
 
 
         return view;
     }
 
+    private void initViews(View view) {
+        ButterKnife.bind(this,view);
+
+    }
+
 
     @SuppressLint("MissingPermission")
     private void init() {
+        //
+        Places .initialize(getContext(),getString(R.string.MAPS_API_KEY));
+        autocompleteSupportFragment = (AutocompleteSupportFragment)getChildFragmentManager()
+                .findFragmentById(R.id.autocomplete_fragment);
+        autocompleteSupportFragment.setPlaceFields(Arrays.asList(Place.Field.ADDRESS, Place.Field.NAME, Place.Field.LAT_LNG));
+        autocompleteSupportFragment.setHint(getString(R.string.where_to));
+        autocompleteSupportFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onError(@NonNull Status status) {
+                Snackbar.make(getView(),"" + status.getStatusMessage(), Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onPlaceSelected(@NonNull Place place) {
+          //     Snackbar.make(getView(),"" + place.getLatLng(), Snackbar.LENGTH_LONG).show();
+                fusedLocationProviderClient.getLastLocation()
+                        .addOnSuccessListener(location1 -> {
+                            LatLng origin  = new LatLng(location1.getLatitude(),location1.getLongitude());
+                            LatLng destination  = new LatLng(place.getLatLng().latitude,place.getLatLng().longitude);
+
+                            startActivity(new Intent(getContext(), RequestUserActivity.class));
+                            EventBus.getDefault().postSticky(new SelectPlaceEvent(origin,destination));
+                        });
+
+            }
+        });
+        //
+
         iGoogleAPI = RetrofitClient.getInstance().create(IGoogleAPI.class);
         //2 rider
         iFirebaseDriverInfoListener = this;
@@ -243,29 +298,29 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPotion, 18f));
                 //  updateLocation
 
-                    geoFire.setLocation(FirebaseAuth.getInstance().getCurrentUser().getUid(),
-                            new GeoLocation(locationResult.getLastLocation().getLatitude(),
-                                    locationResult.getLastLocation().getLongitude()),
-                            new GeoFire.CompletionListener() {
-                                @Override
-                                public void onComplete(String key, DatabaseError error) {
+                geoFire.setLocation(FirebaseAuth.getInstance().getCurrentUser().getUid(),
+                        new GeoLocation(locationResult.getLastLocation().getLatitude(),
+                                locationResult.getLastLocation().getLongitude()),
+                        new GeoFire.CompletionListener() {
+                            @Override
+                            public void onComplete(String key, DatabaseError error) {
 
-                                    if (error != null) {
-                                        Snackbar.make(mapFragment.getView(), error.getMessage(), Snackbar.LENGTH_SHORT)
+                                if (error != null) {
+                                    Snackbar.make(mapFragment.getView(), error.getMessage(), Snackbar.LENGTH_SHORT)
+                                            .show();
+                                } else {
+                                    if (isFirstTime){
+                                        Snackbar.make(mapFragment.getView(), "You are online", Snackbar.LENGTH_SHORT)
                                                 .show();
-                                    } else {
-                                        if (isFirstTime){
-                                            Snackbar.make(mapFragment.getView(), "You are online", Snackbar.LENGTH_SHORT)
-                                                    .show();
-                                            isFirstTime = false;
-                                            isGo = false;
+                                        isFirstTime = false;
+                                        isGo = false;
 
-
-                                        }
 
                                     }
+
                                 }
-                            });
+                            }
+                        });
 
 
 
@@ -277,13 +332,14 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                 if (firstTime) {
                     previosLocation = currentLocation = locationResult.getLastLocation();
                     firstTime = false;
+                    setRestrictPlacesInContry(locationResult.getLastLocation());
 
                 } else {
                     previosLocation = currentLocation;
                     currentLocation = locationResult.getLastLocation();
                 }
                 if (previosLocation.distanceTo(currentLocation) / 1000 < 0.5) {//// not over range
-                 //  loadAvailableDrivers();
+                    //  loadAvailableDrivers();
 
 
 
@@ -299,7 +355,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
 
         fusedLocationProviderClient.requestLocationUpdates(mLocationRequest, locationCallback, Looper.myLooper());
-          //loadAvailableDrivers();
+       // loadAvailableDrivers();
         fusedLocationProviderClient.getLastLocation()
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -316,7 +372,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                             addressList = geocoder.getFromLocation(location.getLatitude(),
                                     location.getLongitude(), 1);
                             String addressLine = addressList.get(0).getAddressLine(0);
-                            countryName = addressList.get(0).getCountryName();
+                            if (addressList.size() > 0 ){
+                                countryName = addressList.get(0).getCountryName();
+                            }
+                            if (!TextUtils.isEmpty(countryName)){
+
+                            }else {
+                                Snackbar.make(getView(),getString(R.string.city_name_emplty),Snackbar.LENGTH_LONG).show();
+                            }
+
 
 
 
@@ -326,6 +390,20 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
 
                     }
                 });
+    }
+
+    private void setRestrictPlacesInContry(Location location) {
+        try {
+            Geocoder geocoder  = new Geocoder(getContext(),Locale.getDefault());
+            List<Address> addressList = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+            if (addressList.size() > 0){
+                autocompleteSupportFragment.setCountry(addressList.get(0).getCountryCode());
+            }
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
     }
 
     private void loadAvailableDrivers() {
@@ -381,7 +459,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                 public void onGeoQueryReady() {
                                     if (distance < LIMIT_RANGE) {
                                         distance++;
-                                      //  loadAvailableDrivers(); // continue search in new distance
+                                        //  loadAvailableDrivers(); // continue search in new distance
                                     } else {
                                         distance = 1.0;// reset it
                                         addDriverMarker();
@@ -568,6 +646,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
 
+
     }
 
     @Override
@@ -599,15 +678,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
             driverLocationRef = FirebaseDatabase.getInstance().getReference("UserLocation").child(roomid);
             currentUserRef = driverLocationRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-                Common.markerList.put(driverDeoModel.getKey(),
-                        mMap.addMarker(new MarkerOptions()
-                                .position(new LatLng(driverDeoModel.getGeoLocation().latitude, driverDeoModel.getGeoLocation().longitude))
-                                .title(Common.buildName(driverDeoModel.getDriverInfoModel().getUsername()))
-                                //  .title(driverDeoModel.getDriverInfoModel().getUsername())
-                                .snippet(driverDeoModel.getDriverInfoModel().getBio())
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
+            Common.markerList.put(driverDeoModel.getKey(),
+                    mMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(driverDeoModel.getGeoLocation().latitude, driverDeoModel.getGeoLocation().longitude))
+                            .title(Common.buildName(driverDeoModel.getDriverInfoModel().getUsername()))
+                            //  .title(driverDeoModel.getDriverInfoModel().getUsername())
+                            .snippet(driverDeoModel.getDriverInfoModel().getBio())
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.car))
 
-                        ));
+                    ));
 
 
         }
@@ -691,9 +770,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                 animationMode.setPolylindeList(Common.decodePoly(polyline));
                             }
                             //moving
-                           // handler =  new Handler();
-                          //  index = -1;
-                          //  next = 1;
+                            // handler =  new Handler();
+                            //  index = -1;
+                            //  next = 1;
+                            animationMode.setIndex(-1);
                             animationMode.setIndex(-1);
                             animationMode.setNext(1);
 
@@ -717,13 +797,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                         valueAnimator.setDuration(3000);
                                         valueAnimator.setInterpolator(new LinearInterpolator());
                                         valueAnimator.addUpdateListener(value -> {
-                                          //  v =  value.getAnimatedFraction();
+                                            //  v =  value.getAnimatedFraction();
                                             animationMode.setV(value.getAnimatedFraction());
-                                          //  lat = v*end.latitude + (1-v) * start.latitude;
+                                            //  lat = v*end.latitude + (1-v) * start.latitude;
                                             animationMode.setLat(animationMode.getV()* animationMode.getEnd().latitude+
                                                     (1-animationMode.getV())
                                                             * animationMode.getStart().latitude);
-                                           // lng = v*end.longitude + (1-v) * start.longitude;
+                                            // lng = v*end.longitude + (1-v) * start.longitude;
                                             animationMode.setLng(animationMode.getV()* animationMode.getEnd().longitude+
                                                     (1-animationMode.getV())
                                                             * animationMode.getStart().longitude);

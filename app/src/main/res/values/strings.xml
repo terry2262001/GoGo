@@ -2,8 +2,20 @@
     <string name="app_name">GoGo</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="MAPS_API_KEY">AIzaSyARvcuKLyKFx7ZSUXrN-DxYTD7ph4Bvlbc</string>
+    <string name="MAPS_API_KEY">AIzaSyA5w__BYdqo6WwKq5txsueMs0nYy2jDW60</string>
     <string name="permission_require">Location permisstion  required</string>
     <string name="driver_not_found">Driver not found !</string>
     <string name="not_found_key">Not Found User</string>
+    <string name="where_to">Where to ?</string>
+    <string name="city_name_emplty">City name is empty</string>
+
+    <!-- Checkout activity -->
+    <string name="title_activity_request_user">RequestUserActivity</string>
+    <string name="checkout_item_description">Description</string>
+    <string name="googlepay_status_unavailable" translatable="false">Unfortunately, Google Pay is
+        not available on this phone.
+    </string>
+    <string name="payments_show_name" translatable="false">Successfully received payment data for
+        %s!
+    </string>
 </resources>
