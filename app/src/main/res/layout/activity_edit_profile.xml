@@ -22,6 +22,7 @@
                 android:layout_height="wrap_content">
 
                 <ImageView
+                    android:padding="6dp"
                     android:id="@+id/imgClose"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -42,6 +43,7 @@
                     android:id="@+id/tvEditProfile"/>
 
                 <TextView
+                    android:padding="6dp"
                     android:id="@+id/tvSave"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

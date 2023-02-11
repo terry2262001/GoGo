@@ -487,10 +487,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, IFireb
                                     newUserLocation.setLatitude(geoLocation.latitude);
                                     newUserLocation.setLongitude(geoLocation.longitude);
                                     float newDistance = location.distanceTo(newUserLocation) / 1000 ;// in km
-                                    if (newDistance <= LIMIT_RANGE)
-                                    {
-                                        findDriverByKey(driverDeoModel);// if user in range, add to map
-                                    }
+//                                    if (newDistance <= LIMIT_RANGE)
+//                                    {
+//                                        findDriverByKey(driverDeoModel);// if user in range, add to map
+//                                    }
 
 
                                 }

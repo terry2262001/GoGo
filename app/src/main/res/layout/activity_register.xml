@@ -10,9 +10,11 @@
     android:gravity="center">
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="140dp"
         android:layout_height="150dp"
-        android:src="@drawable/gogo" />
+        android:src="@drawable/logstart"
+        />
 
     <EditText
         android:layout_width="match_parent"
@@ -44,7 +46,7 @@
         android:layout_height="50dp"
         android:background="@drawable/edittext_background"
         android:hint="Password"
-        android:inputType="textEmailAddress"
+        android:inputType="textPassword"
         android:layout_marginTop="15dp"
         android:id="@+id/etPassword"
         android:padding="10dp"/>

@@ -7,8 +7,14 @@
     tools:context=".RegisterActivity"
     android:orientation="vertical"
     android:layout_margin="20dp"
-    android:gravity="center"
-    android:background="@drawable/start">
+    android:gravity="center_vertical"
+   >
+    <ImageView
+        android:layout_gravity="center_horizontal"
+        android:layout_width="140dp"
+        android:layout_height="150dp"
+        android:src="@drawable/logstart"
+        />
 
 
     <EditText
@@ -18,35 +24,67 @@
         android:background="@drawable/edittext_background"
         android:hint="Email"
         android:inputType="textEmailAddress"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="20dp"
         android:id="@+id/etEmail"
         android:padding="10dp"/>
+
     <EditText
+        android:id="@+id/etPassword"
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:layout_marginTop="15dp"
         android:background="@drawable/edittext_background"
         android:hint="Password"
-        android:inputType="textEmailAddress"
-        android:layout_marginTop="15dp"
-        android:id="@+id/etPassword"
-        android:padding="10dp"/>
+        android:inputType="textPassword"
+        android:padding="10dp"
+
+        />
+
     <androidx.appcompat.widget.AppCompatButton
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/btLogin"
-        android:text="Log in"
+        android:text="Login"
         android:textAllCaps="false"
         android:textColor="@color/colorPrimary"
         android:background="@drawable/button_background"
 
         android:layout_marginTop="15dp"/>
-    <TextView
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Don't have an account? Sign up"
-        android:id="@+id/tvSignup"
-        android:layout_marginTop="10dp"
-        android:gravity="center"/>
+        android:orientation="vertical">
+        <TextView
+            android:padding="5dp"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Don't have an account? Sign up"
+            android:id="@+id/tvSignup"
+            android:layout_marginTop="10dp"
+            android:gravity="center"/>
+        <TextView
+            android:layout_marginLeft="110dp"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="or"
+            android:gravity="center_horizontal"/>
+        <TextView
+            android:layout_marginLeft="60dp"
+            android:padding="5dp"
+            android:id="@+id/tvReset"
+            android:textColor="@color/colorPrimary"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forgot password"
+            android:gravity="center"/>
+
+    </LinearLayout>
+
 
 
 

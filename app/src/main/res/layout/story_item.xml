@@ -32,7 +32,8 @@
         android:maxLines="1"
         android:id="@+id/tvUsername"
         android:textColor="@color/colorPrimaryDark"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"/>
 
 
 </LinearLayout>

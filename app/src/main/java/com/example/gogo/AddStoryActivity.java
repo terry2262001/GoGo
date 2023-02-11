@@ -42,9 +42,6 @@ public class AddStoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_story);
         storageReference  = FirebaseStorage.getInstance().getReference("story");
-//        UCrop.of(mImageUri, mImageUri)
-//                .withAspectRatio(16, 9)//.withMaxResultSize(50  , maxHeight)
-//                .start(AddStoryActivity.this);
           openImage1();
 
     }
@@ -157,7 +154,7 @@ public class AddStoryActivity extends AppCompatActivity {
         UCrop uCrop = UCrop.of(uri,Uri.fromFile(new File(getCacheDir(),destinationFileName)));
         uCrop.withAspectRatio(16, 9);
         uCrop.withAspectRatio(1,1);
-        uCrop.withMaxResultSize(450,450);
+        uCrop.withMaxResultSize(450,600);
         uCrop.withOptions(getOptions());
         uCrop.start(AddStoryActivity.this);
 

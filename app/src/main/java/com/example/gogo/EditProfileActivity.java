@@ -102,20 +102,33 @@ public class EditProfileActivity extends AppCompatActivity {
         tvSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateProfile(etFullname.getText().toString(),etUsername.getText().toString(),etBio.getText().toString());
+                ProgressDialog pd  = new ProgressDialog(EditProfileActivity.this);
+                pd.setMessage("Uploading");
+                pd.show();
+                updateProfile(etFullname.getText().toString(),etUsername.getText().toString(),etBio.getText().toString(),pd);
 
             }
         });
 
     }
 
-    private void updateProfile(String fullname, String username, String bio) {
+    private void updateProfile(String fullname, String username, String bio, ProgressDialog pd) {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
         HashMap<String,Object> hashMap = new HashMap<>();
         hashMap.put("fullname",fullname);
         hashMap.put("username",username);
         hashMap.put("bio",bio);
-        reference.updateChildren(hashMap);
+        reference.updateChildren(hashMap)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                          pd.dismiss();
+                          finish();
+                    }
+                });
+
+
+
 
     }
     private String getFileExtension(Uri uri){
@@ -209,7 +222,7 @@ public class EditProfileActivity extends AppCompatActivity {
         options.setFreeStyleCropEnabled(true);
 
         // options.setStatusBarColor();
-        options.setToolbarTitle("Cai lai");
+        options.setToolbarTitle("Edit Image");
         return options;
     }
 }

@@ -27,6 +27,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText email ,password;
     Button btLogin;
     TextView tvSignup;
+    TextView tvReset;
 
     FirebaseAuth auth;
 
@@ -39,11 +40,18 @@ public class LoginActivity extends AppCompatActivity {
         password = findViewById(R.id.etPassword);
         btLogin = findViewById(R.id.btLogin);
         tvSignup = findViewById(R.id.tvSignup);
+        tvReset = findViewById(R.id.tvReset);
+        tvReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(LoginActivity.this,ResetPasswordActivity.class));
+            }
+        });
 
         tvSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(LoginActivity.this,MainActivity.class));
+                startActivity(new Intent(LoginActivity.this,RegisterActivity.class));
             }
         });
         btLogin.setOnClickListener(new View.OnClickListener() {
